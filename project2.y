@@ -460,6 +460,16 @@ load_stmt:	REG EQUALS LOAD INT_TYPE POINTER REG
                                   strcpy(type_arr[0], $4);
                                   loadStmt($1, $6); }
 
+                | REG EQUALS LOAD INT_TYPE POINTER GLOBAL_DEF 
+                                { strcat($4, $5);
+                                strcpy(type_arr[0], $4);
+                                loadStmt($1, $6); }
+
+                | REG EQUALS LOAD INT_TYPE POINTER GLOBAL_DEF COMMA ALIGN NUM 
+                                { strcat($4, $5);
+                                strcpy(type_arr[0], $4);
+                                loadStmt($1, $6); }
+
 storeReg_stmt:	STORE INT_TYPE REG COMMA INT_TYPE POINTER REG 
 								{ strcat($5,$6);
                                   strcpy(type_arr[0], $2); strcpy(type_arr[1], $5);
@@ -474,6 +484,20 @@ storeReg_stmt:	STORE INT_TYPE REG COMMA INT_TYPE POINTER REG
 								  strcpy(param.reg, $3);
 								  storeStmt($7, param, STR_REG); }
 
+                | STORE INT_TYPE REG COMMA INT_TYPE POINTER GLOBAL_DEF 
+                                { strcat($5,$6);
+                                  strcpy(type_arr[0], $2); strcpy(type_arr[1], $5);
+                                  param_t param;
+                                  strcpy(param.reg, $3);
+                                  storeStmt($7, param, STR_REG); }
+
+                | STORE INT_TYPE REG COMMA INT_TYPE POINTER GLOBAL_DEF COMMA ALIGN NUM 
+                                { strcat($5,$6); 
+                                  strcpy(type_arr[0], $2); strcpy(type_arr[1], $5);
+                                  param_t param;
+                                  strcpy(param.reg, $3);
+                                  storeStmt($7, param, STR_REG); }
+
 storeCon_stmt:	STORE INT_TYPE NUM COMMA INT_TYPE POINTER REG 
 								{ strcat($5,$6);
                                   strcpy(type_arr[0], $2); strcpy(type_arr[1], $5);
@@ -487,6 +511,20 @@ storeCon_stmt:	STORE INT_TYPE NUM COMMA INT_TYPE POINTER REG
                                   param_t param;
 								  param.imm = $3;
 								  storeStmt($7, param, STR_CONST); }
+
+                | STORE INT_TYPE NUM COMMA INT_TYPE POINTER GLOBAL_DEF 
+                                { strcat($5,$6);
+                                  strcpy(type_arr[0], $2); strcpy(type_arr[1], $5);
+                                  param_t param;
+                                  param.imm = $3;
+                                  storeStmt($7, param, STR_CONST); }
+
+                | STORE INT_TYPE NUM COMMA INT_TYPE POINTER GLOBAL_DEF COMMA ALIGN NUM 
+                                { strcat($5,$6);
+                                  strcpy(type_arr[0], $2); strcpy(type_arr[1], $5);
+                                  param_t param;
+                                  param.imm = $3;
+                                  storeStmt($7, param, STR_CONST); }
 
 storePtr_stmt:	STORE INT_TYPE POINTER REG COMMA INT_TYPE POINTER REG 
                                 { strcat($2,$3); strcat($6,$7);
