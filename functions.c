@@ -645,7 +645,6 @@ void ssa_form(stmt *stmnt, char *reg)
         
 		curr = curr->next;
 	}
-	current=current->next;
 }
 
 int isReg(stmt *step, int arg)

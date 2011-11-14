@@ -660,7 +660,7 @@ int main(int argc, char *argv[]) {
         
         //Register promotion
         register_promotion();
-        //while (dead_code() != 0);
+        while (dead_code() != 0);
 		current=HEAD;
 		FILE *fp = fopen(argv[1], "w");
 		if(fp == NULL) {
