@@ -679,6 +679,7 @@ block *generate_cfg()
     stmt *line = HEAD;
     block **label_list;
     block *present;
+    char compare[100];
     
     while(line != NULL)
     {
@@ -729,7 +730,8 @@ block *generate_cfg()
     while (k < i) 
     {
         present = label_list[++k];
-
+        j = 0;
+        
         while (present->instruction->type != BR_COND && present->instruction->type != BR_UNCOND)
         {
             present=present->left;
@@ -742,7 +744,13 @@ block *generate_cfg()
         
         if (present->instruction->type == BR_UNCOND)
         {
-            for(j = 0; strcmp(strtok(label_list[j]->instruction->label_name," "), &present->instruction->label_name[1]) != 0; j++);
+            strcpy(compare, label_list[j]->instruction->label_name);
+            
+            while (strcmp(strtok(compare," "), &present->instruction->label_name[1]) != 0)
+            {
+                j++;
+                strcpy(compare, label_list[j]->instruction->label_name);
+            }
             
             present->left = label_list[j];
             
@@ -750,14 +758,23 @@ block *generate_cfg()
                 strcat(present->left->preds,",");
             
             strcat(present->left->preds," \%");
-            if (strcmp(strtok(label_list[k]->instruction->label_name," "), "define") == 0)
+            
+            strcpy(compare, label_list[k]->instruction->label_name);
+            
+            if (strcmp(compare, "define") == 0)
                 strcat(present->left->preds, "0");  
             else
                 strcat(present->left->preds, strtok(label_list[k]->instruction->label_name," "));
         }
         else if (present->instruction->type == BR_COND)
         {
-            for(j = 0; strcmp(strtok(label_list[j]->instruction->label_name," "), &present->instruction->branch[1][1]) != 0; j++);
+            strcpy(compare, label_list[j]->instruction->label_name);
+            
+            while (strcmp(strtok(compare," "), &present->instruction->branch[1][1]) != 0)
+            {
+                j++;
+                strcpy(compare, label_list[j]->instruction->label_name);
+            }
             
             present->left = label_list[j];
             
@@ -770,7 +787,14 @@ block *generate_cfg()
             else
                 strcat(present->left->preds, strtok(label_list[k]->instruction->label_name," "));
             
-            for(j = 0; strcmp(strtok(label_list[j]->instruction->label_name," "), &present->instruction->branch[2][1]) != 0; j++);
+            j = 0;
+            strcpy(compare, label_list[j]->instruction->label_name);
+            
+            while (strcmp(strtok(compare," "), &present->instruction->branch[2][1]) != 0)
+            {
+                j++;
+                strcpy(compare, label_list[j]->instruction->label_name);
+            }
             
             present->right = label_list[j];
             
@@ -793,7 +817,7 @@ block *generate_cfg()
     
     for (i = 0; i< num_of_labels; i++)
     {
-        printf("%%%s,\tpreds = %s\n", label_list[i]->instruction->label_name, label_list[i]->preds);
+        printf("%d,\t%s\n", label_list[i]->instruction->type, label_list[i]->preds);
     }
     
     return present;

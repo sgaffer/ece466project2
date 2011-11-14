@@ -679,7 +679,7 @@ int main(int argc, char *argv[]) {
         }
     }
     
-    //generate_cfg();
+    generate_cfg();
     return 0;
 }
 
