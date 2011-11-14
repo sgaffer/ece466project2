@@ -750,7 +750,7 @@ block *generate_cfg()
             
             present->left = label_list[j];
             
-            if (strcmp(present->left->preds, "") != 0)
+            if (strlen(present->left->preds) != 0)
                 strcat(present->left->preds,",");
             
             strcat(present->left->preds," \%");
@@ -768,7 +768,7 @@ block *generate_cfg()
             
             present->left = label_list[j];
             
-            if (strcmp(present->left->preds, "") != 0)
+            if (strlen(present->left->preds) != 0)
                 strcat(present->left->preds,",");
             
             strcat(present->left->preds," \%");
@@ -785,8 +785,8 @@ block *generate_cfg()
             
             present->right = label_list[j];
             
-            if (strcmp(present->left->preds, "") != 0)
-                strcat(present->left->preds,",");
+            if (strlen(present->right->preds) != 0)
+                strcat(present->right->preds,",");
             
             strcat(present->right->preds," \%");
             if (strcmp(strtok(label_list[k]->instruction->label_name," "), "define") == 0)
