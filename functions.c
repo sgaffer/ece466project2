@@ -729,8 +729,7 @@ block *generate_cfg()
     while (k < i) 
     {
         present = label_list[++k];
-        j = 0;
-        
+
         while (present->instruction->type != BR_COND && present->instruction->type != BR_UNCOND)
         {
             present=present->left;
@@ -743,10 +742,7 @@ block *generate_cfg()
         
         if (present->instruction->type == BR_UNCOND)
         {
-            while (strcmp(strtok(label_list[j]->instruction->label_name," "), &present->instruction->label_name[1]) != 0)
-            {
-                j++;
-            }
+            for(j = 0; strcmp(strtok(label_list[j]->instruction->label_name," "), &present->instruction->label_name[1]) != 0; j++);
             
             present->left = label_list[j];
             
@@ -761,10 +757,7 @@ block *generate_cfg()
         }
         else if (present->instruction->type == BR_COND)
         {
-            while (strcmp(strtok(label_list[j]->instruction->label_name," "), &present->instruction->branch[1][1]) != 0)
-            {
-                j++;
-            }
+            for(j = 0; strcmp(strtok(label_list[j]->instruction->label_name," "), &present->instruction->branch[1][1]) != 0; j++);
             
             present->left = label_list[j];
             
@@ -777,11 +770,7 @@ block *generate_cfg()
             else
                 strcat(present->left->preds, strtok(label_list[k]->instruction->label_name," "));
             
-            j = 0;
-            while (strcmp(strtok(label_list[j]->instruction->label_name," "), &present->instruction->branch[2][1]) != 0)
-            {
-                j++;
-            }
+            for(j = 0; strcmp(strtok(label_list[j]->instruction->label_name," "), &present->instruction->branch[2][1]) != 0; j++);
             
             present->right = label_list[j];
             
@@ -802,10 +791,10 @@ block *generate_cfg()
     
     sprintf(label_list[0]->preds,"%s","");
     
-    /*for (i = 0; i< num_of_labels; i++)
+    for (i = 0; i< num_of_labels; i++)
     {
-        printf("%d, %s\n", label_list[i]->instruction->type, label_list[i]->preds);
-    }*/
+        printf("%%%s,\tpreds = %s\n", label_list[i]->instruction->label_name, label_list[i]->preds);
+    }
     
     return present;
 }
