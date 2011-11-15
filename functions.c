@@ -745,6 +745,7 @@ int isReg(stmt *step, int arg)
 	return 0;
 }
 
+
 block_array generate_cfg() 
 {    
     block_array cfg;
