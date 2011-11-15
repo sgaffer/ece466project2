@@ -662,7 +662,7 @@ int main(int argc, char *argv[]) {
 		//printf("yyparse done\n");
 	
 //Register promotion
-	//register_promotion();
+	register_promotion();
 	//while (dead_code() != 0);
 		current=HEAD;
 		FILE *fp = fopen(argv[1], "w");
@@ -680,7 +680,7 @@ int main(int argc, char *argv[]) {
         }
     }
     
-    cfg = generate_cfg();
+    //cfg = generate_cfg();
 
     return 0;
 }

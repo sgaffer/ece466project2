@@ -294,7 +294,8 @@ void register_promotion() {
 	//scan for vaiable to promote
 	while(cur != NULL) {
 		if( cur->type == ALLOC || cur->type == GLOBAL_VAR ) {
- 			strcpy(names[count++],cur->defined_regs);
+			if(strchr(cur->branch[0],'*') == NULL)
+ 				strcpy(names[count++],cur->defined_regs);
 		}
 		cur=cur->next;
 	}
@@ -351,10 +352,20 @@ void register_promotion() {
 			newName = isPromtedVar(cur->arg1.reg, LOADD);
 			if(newName != NULL)
 			{
-				strcpy(cur->branch[0],"i32");
-				strcpy(cur->arg1.reg, newName);
-				cur->arg2.imm = 0;
-				cur->type = ADD_RC;
+				//if(strchr(cur->branch[0],'*') == NULL)
+				//{
+                strcpy(cur->branch[0],"i32");
+                strcpy(cur->arg1.reg, newName);
+                cur->arg2.imm = 0;
+                cur->type = ADD_RC;
+				//}
+				/*else
+                 {
+                 strcpy(cur->arg1.reg, newName);
+                 strcpy(cur->branch[1], "i32");
+                 cur->arg2.imm = 0;
+                 cur->type = GEP_RC;
+                 }*/
 			}			
 		}
 		else if(cur->type == STR_REG)
@@ -363,11 +374,22 @@ void register_promotion() {
 			if(newName != NULL)
 			{
 				char temp[50];
-				strcpy(temp,cur->defined_regs);
-				strcpy(cur->defined_regs, newName);
-				//strcpy(cur->arg1.reg, temp);
-				cur->arg2.imm = 0;
-				cur->type = ADD_RC;
+				if(strchr(cur->branch[0],'*') == NULL)
+				{
+					strcpy(cur->branch[0],"i32");
+					strcpy(temp,cur->defined_regs);
+					strcpy(cur->defined_regs, newName);
+					//strcpy(cur->arg1.reg, temp);
+					cur->arg2.imm = 0;
+					cur->type = ADD_RC;
+				}
+				else
+				{
+					strcpy(cur->defined_regs, newName);
+					strcpy(cur->branch[1], "i32");
+					cur->arg2.imm = 0;
+					cur->type = GEP_RC;
+				}
 			}
 		}
 		else if(cur->type == STR_CONST)
@@ -375,9 +397,20 @@ void register_promotion() {
 			newName = isPromtedVar(cur->defined_regs, STR_CONST);
 			if(newName != NULL)
 			{
-				strcpy(cur->defined_regs, newName);
-				cur->arg2.imm = 0;
-				cur->type = ADD_CC;
+				if(strchr(cur->branch[0],'*') == NULL)
+				{
+					strcpy(cur->branch[0],"i32");
+					strcpy(cur->defined_regs, newName);
+					cur->arg2.imm = 0;
+					cur->type = ADD_CC;
+				}
+				else
+				{
+					strcpy(cur->defined_regs, newName);
+					strcpy(cur->branch[1], "i32");
+					cur->arg2.imm = 0;
+					cur->type = GEP_RC;
+				}
 			}
 		}	
 		
@@ -553,96 +586,104 @@ int dead_code(){
 
 //}
 
-void ssa_form(stmt *stmnt, char *reg)
+void ssa_form()
 {
-	int ref;
-	int currentReg;
-	stmt *curr = stmnt;
-	
+	stmt* curr = HEAD;
 	char *begin;
 	char *end;
-	char regIn[50];
-	char argsOut[100] = "";
-	
-	//printf("REG: %s\n", reg);
-	
-	if(stmnt == NULL)		//no new statments to rename
-	{
-		//printf("NULL REturn\n");
-		return;
-	}
-    
-	ref = atoi(&reg[1]);
-	if(ref == 0)		//removed a variable or something not a register
-	{
-		//printf("No NUm Return\n");
-		return;
-	}
+	char replace[50];
+	char regIn[20];
+	char argsOut[100];
     
 	while(curr != NULL)
 	{
+		if(curr->type == GLOBAL_CONST)
+		{
+			curr = curr->next;
+			continue;
+		}
 		if(isReg(curr, 1))
 		{
-			currentReg = atoi(&curr->arg1.reg[1]);
-			if((currentReg != 0) && (currentReg > ref))
+			if(curr->arg1.reg[0] != '@')
 			{
-				sprintf(curr->arg1.reg, "%%%d", (currentReg-1));
-				//printf("Reg Deced %d\n", (currentReg-1));
+				strcpy(replace, "%");
+				strcat(replace, "r");
+				strcat(replace, &curr->arg1.reg[1]);
+                
+				//printf("________________REG1: %s\n", replace);
+                
+				strcpy(curr->arg1.reg, replace);
 			}
+            
 		}
 		if(isReg(curr, 2))
 		{
-			currentReg = atoi(&curr->arg2.reg[1]);
-			if((currentReg != 0) && (currentReg > ref))
+			if(curr->arg2.reg[0] != '@')
 			{
-				sprintf(curr->arg2.reg, "%%%d", (currentReg-1));
-				//printf("Reg Deced %d\n", (currentReg-1));
+				strcpy(replace, "%");
+				strcat(replace, "r");
+				strcat(replace, &curr->arg2.reg[1]);
+                
+				//printf("________________REG2: %s\n", replace);
+                
+				strcpy(curr->arg2.reg, replace);
 			}
 		}
         
-		currentReg = atoi(&curr->defined_regs[1]);
-		if((currentReg != 0) && (currentReg > ref))
+		if(curr->defined_regs[0] != '@')
 		{
-			sprintf(curr->defined_regs, "%%%d", (currentReg-1));
-			//printf("Reg Deced %d\n", (currentReg-1));
+			strcpy(replace, "%");
+			strcat(replace, "r");
+			strcat(replace, &curr->defined_regs[1]);
+            
+			//printf("________________defined: %s\n", replace);
+            
+			strcpy(curr->defined_regs, replace);
 		}
         
 		if((curr->type == CALL_SCANF) || (curr->type == CALL_PRINTF))
 		{			
+            
 			begin = curr->label_name;
+			strcpy(argsOut, "");
 			while(begin != NULL)
 			{
 				end = strchr(begin, '%');
+                
 				if(end == NULL) break;
                 
 				strncat(argsOut, begin, (end-begin-1));
+				printf("___________________argOut1: %s\n", argsOut);
                 
 				begin = end+1;
-				end = strchr(begin, ' ');
+                
+				end = strchr(begin, ',');
 				if(end == NULL)
 					end = begin + strlen(begin);
                 
+                
 				strncpy(regIn, begin, (end-begin));
                 
-				currentReg = atoi(regIn);
-				if(currentReg > ref)
-					sprintf(argsOut, "%s %%%d", argsOut, (currentReg-1));
-				else
-					sprintf(argsOut, "%s %%%d", argsOut, currentReg);
+				//sprintf(argsOut, "%s", argsOut);
+				sprintf(argsOut, "%s %%r%s", argsOut, regIn);
+				printf("___________________argOut2: %s\n", argsOut);
                 
 				begin = strchr(begin, ',');
+                
 				if(begin == NULL)
 					break;
 				else 
 				{
+                    
 					begin += 2;
 					strcat(argsOut, ", ");
 				}
 			}
             
+            
 			sprintf(curr->label_name, "%s", argsOut);
 		}
-        
+		
 		curr = curr->next;
 	}
 }
