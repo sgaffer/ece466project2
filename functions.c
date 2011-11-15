@@ -574,18 +574,12 @@ int dead_code(){
             continue;
         }	
     }
-    //ssa_form(curr,returnSSA);
     //if we quit because we found a match tell the user to run again
     if(used==0 && curr != NULL)
         return MORE_TO_DO;
     else //otherwise tell the user we're done with analysis.
         return DONE;
 }
-
-
-
-//}
-
 void ssa_form()
 {
 	stmt* curr = HEAD;
@@ -601,6 +595,46 @@ void ssa_form()
 		{
 			curr = curr->next;
 			continue;
+		}
+		if(curr->type == BR_COND)
+		{
+			if((strcmp(curr->branch[0],"true") != 0) && (strcmp(curr->branch[0],"false") != 0))
+			{
+				strcpy(replace, "%");
+				strcat(replace, "r");
+				strcat(replace, &curr->branch[0][1]);
+                
+				strcpy(curr->branch[0], replace);
+			}
+		}
+		if(curr->type == BR_COND)
+		{
+			strcpy(replace, "%");
+			strcat(replace, "r");
+			strcat(replace, &curr->branch[1][1]);
+            
+			strcpy(curr->branch[1], replace);
+            
+			strcpy(replace, "%");
+			strcat(replace, "r");
+			strcat(replace, &curr->branch[2][1]);
+            
+			strcpy(curr->branch[2], replace);
+		}
+		if(curr->type == BR_UNCOND)
+		{
+			strcpy(replace, "%");
+			strcat(replace, "r");
+			strcat(replace, &curr->label_name[1]);
+            
+			strcpy(curr->label_name, replace);
+		}
+		if(curr->type == LABELL)
+		{
+			strcpy(replace, "r");
+			strcat(replace, curr->label_name);
+            
+			strcpy(curr->label_name, replace);
 		}
 		if(isReg(curr, 1))
 		{
@@ -663,6 +697,7 @@ void ssa_form()
                 
                 
 				strncpy(regIn, begin, (end-begin));
+				regIn[end-begin] = '\0';
                 
 				//sprintf(argsOut, "%s", argsOut);
 				sprintf(argsOut, "%s %%r%s", argsOut, regIn);
@@ -679,14 +714,14 @@ void ssa_form()
 					strcat(argsOut, ", ");
 				}
 			}
-            
-            
 			sprintf(curr->label_name, "%s", argsOut);
 		}
 		
 		curr = curr->next;
 	}
 }
+
+
 
 int isReg(stmt *step, int arg)
 {
@@ -861,9 +896,9 @@ block_array generate_cfg()
     sprintf(cfg.label_list[0]->preds,"%s","");
     
     /*for (i = 0; i< cfg.num_of_labels; i++)
-    {
-        printf("%d,\t%s\n", cfg.label_list[i]->instruction->type, cfg.label_list[i]->preds);
-    }*/
+     {
+     printf("%d,\t%s\n", cfg.label_list[i]->instruction->type, cfg.label_list[i]->preds);
+     }*/
     
     return cfg;
 }
@@ -894,3 +929,4 @@ block *getBlock(block_array cfg, stmt *line) {
     
     return present;
 }
+
