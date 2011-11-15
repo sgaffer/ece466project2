@@ -669,28 +669,28 @@ int isReg(stmt *step, int arg)
 	return 0;
 }
 
-block *generate_cfg() 
+block_array generate_cfg() 
 {    
+    block_array cfg;
     int i = -1;
     int j = 0;
     int k = -1;
     int q = 0;
-    int num_of_labels = 1;
     stmt *line = HEAD;
-    block **label_list;
     block *present;
     char compare[100];
+    cfg.num_of_labels = 1;
     
     while(line != NULL)
     {
         if (line->type == LABELL)
-            num_of_labels++;
+            cfg.num_of_labels++;
         
         line = line->next;
     }
     
     line = HEAD;
-    label_list = malloc(num_of_labels * sizeof(block *));
+    cfg.label_list = malloc(cfg.num_of_labels * sizeof(block *));
     
     //printf("number of labels = %d\n", num_of_labels);
     
@@ -699,8 +699,8 @@ block *generate_cfg()
     
     while (q != 1) 
     {
-        label_list[++i] = (block *) malloc(sizeof(block));
-        present = label_list[i];
+        cfg.label_list[++i] = (block *) malloc(sizeof(block));
+        present = cfg.label_list[i];
         strcpy(present->preds,"");
         
         while (q != 1) 
@@ -729,7 +729,7 @@ block *generate_cfg()
     
     while (k < i) 
     {
-        present = label_list[++k];
+        present = cfg.label_list[++k];
         j = 0;
         
         while (present->instruction->type != BR_COND && present->instruction->type != BR_UNCOND)
@@ -744,66 +744,67 @@ block *generate_cfg()
         
         if (present->instruction->type == BR_UNCOND)
         {
-            strcpy(compare, label_list[j]->instruction->label_name);
+            strcpy(compare, cfg.label_list[j]->instruction->label_name);
             
             while (strcmp(strtok(compare," "), &present->instruction->label_name[1]) != 0)
             {
                 j++;
-                strcpy(compare, label_list[j]->instruction->label_name);
+                strcpy(compare, cfg.label_list[j]->instruction->label_name);
             }
             
-            present->left = label_list[j];
+            present->left = cfg.label_list[j];
             
             if (strlen(present->left->preds) != 0)
                 strcat(present->left->preds,",");
             
             strcat(present->left->preds," \%");
             
-            strcpy(compare, label_list[k]->instruction->label_name);
+            strcpy(compare, cfg.label_list[k]->instruction->label_name);
             
             if (strcmp(strtok(compare," "), "define") == 0)
                 strcat(present->left->preds, "0");  
             else
-                strcat(present->left->preds, strtok(label_list[k]->instruction->label_name," "));
+                strcat(present->left->preds, strtok(compare," "));
         }
         else if (present->instruction->type == BR_COND)
         {
-            strcpy(compare, label_list[j]->instruction->label_name);
+            strcpy(compare, cfg.label_list[j]->instruction->label_name);
             
             while (strcmp(strtok(compare," "), &present->instruction->branch[1][1]) != 0)
             {
                 j++;
-                strcpy(compare, label_list[j]->instruction->label_name);
+                strcpy(compare, cfg.label_list[j]->instruction->label_name);
             }
             
-            present->left = label_list[j];
+            present->left = cfg.label_list[j];
             
             if (strlen(present->left->preds) != 0)
                 strcat(present->left->preds,",");
             
+            strcpy(compare, cfg.label_list[k]->instruction->label_name);
             strcat(present->left->preds," \%");
-            if (strcmp(strtok(label_list[k]->instruction->label_name," "), "define") == 0)
+            if (strcmp(strtok(compare," "), "define") == 0)
                 strcat(present->left->preds, "0");  
             else
-                strcat(present->left->preds, strtok(label_list[k]->instruction->label_name," "));
+                strcat(present->left->preds, strtok(compare," "));
             
             j = 0;
-            strcpy(compare, label_list[j]->instruction->label_name);
+            strcpy(compare, cfg.label_list[j]->instruction->label_name);
             
             while (strcmp(strtok(compare," "), &present->instruction->branch[2][1]) != 0)
             {
                 j++;
-                strcpy(compare, label_list[j]->instruction->label_name);
+                strcpy(compare, cfg.label_list[j]->instruction->label_name);
             }
             
-            present->right = label_list[j];
+            present->right = cfg.label_list[j];
             
             if (strlen(present->right->preds) != 0)
                 strcat(present->right->preds,",");
             
             strcat(present->right->preds," \%");
             
-            strcpy(compare, label_list[k]->instruction->label_name);
+            strcpy(compare, cfg.label_list[k]->instruction->label_name);
             
             if (strcmp(strtok(compare," "), "define") == 0)
                 strcat(present->right->preds, "0");  
@@ -814,14 +815,41 @@ block *generate_cfg()
             break;
     }
     
-    present = label_list[0];
+    present = cfg.label_list[0];
     
-    sprintf(label_list[0]->preds,"%s","");
+    sprintf(cfg.label_list[0]->preds,"%s","");
     
-    for (i = 0; i< num_of_labels; i++)
+    /*for (i = 0; i< cfg.num_of_labels; i++)
     {
-        printf("%d,\t%s\n", label_list[i]->instruction->type, label_list[i]->preds);
+        printf("%d,\t%s\n", cfg.label_list[i]->instruction->type, cfg.label_list[i]->preds);
+    }*/
+    
+    return cfg;
+}
+
+block *getBlock(block_array cfg, stmt *line) {
+    block *present;
+    int i;
+    
+    for(i = 0; i < cfg.num_of_labels; i++) {
+        present = cfg.label_list[i];
+        
+        while (present->instruction != line) {
+            
+            if (present->instruction == line)
+                break;
+            
+            if (present->instruction->type == BR_COND || present->instruction->type == BR_UNCOND)
+                break;
+            
+            present = present->left;
+        }
+        
+        if (present->instruction == line)
+            break;
     }
+    
+    present = cfg.label_list[i];
     
     return present;
 }

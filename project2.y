@@ -648,6 +648,7 @@ int main(int argc, char *argv[]) {
 	strcpy(empty.reg,"");	
 	HEAD=NULL;
 	current=NULL;
+    block_array cfg;
 	if (argc<3) {
         printf("Incorrect parameters.\n");
         printf("project2 [outputfile] [inputfile]\n");
@@ -679,7 +680,8 @@ int main(int argc, char *argv[]) {
         }
     }
     
-    generate_cfg();
+    cfg = generate_cfg();
+
     return 0;
 }
 
