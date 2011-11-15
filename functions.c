@@ -761,7 +761,7 @@ block *generate_cfg()
             
             strcpy(compare, label_list[k]->instruction->label_name);
             
-            if (strcmp(compare, "define") == 0)
+            if (strcmp(strtok(compare," "), "define") == 0)
                 strcat(present->left->preds, "0");  
             else
                 strcat(present->left->preds, strtok(label_list[k]->instruction->label_name," "));
@@ -802,10 +802,13 @@ block *generate_cfg()
                 strcat(present->right->preds,",");
             
             strcat(present->right->preds," \%");
-            if (strcmp(strtok(label_list[k]->instruction->label_name," "), "define") == 0)
+            
+            strcpy(compare, label_list[k]->instruction->label_name);
+            
+            if (strcmp(strtok(compare," "), "define") == 0)
                 strcat(present->right->preds, "0");  
             else
-                strcat(present->right->preds, strtok(label_list[k]->instruction->label_name," "));
+                strcat(present->right->preds, strtok(compare," "));
         }
         else    // RETURN STATEMENT
             break;
